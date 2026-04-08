@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { Cv } from './entities/cv.entity';
@@ -8,10 +8,11 @@ export class CvService {
   private cvs: Cv[] = [];
   private nextId = 1;
 
-  create(dto: CreateCvDto): Cv {
+  create(dto: CreateCvDto, userId: number): Cv {
     const cv: Cv = {
       id: this.nextId++,
       ...dto,
+      userId: userId,
       skillIds: dto.skillIds ?? [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -33,16 +34,30 @@ export class CvService {
     return cv;
   }
 
-  update(id: number, dto: UpdateCvDto): Cv {
+  update(id: number, dto: UpdateCvDto, userId: number): Cv {
     const cv = this.findOne(id);
+    
+    if (cv.userId !== userId) {
+      throw new ForbiddenException(
+        'You can only update your own CV',
+      );
+    }
+    
     Object.assign(cv, dto, { updatedAt: new Date() });
     return cv;
   }
 
-  remove(id: number): { deleted: boolean; id: number } {
+  remove(id: number, userId: number): { deleted: boolean; id: number } {
     const index = this.cvs.findIndex((item) => item.id === id);
     if (index === -1) {
       throw new NotFoundException(`Cv ${id} not found`);
+    }
+
+    const cv = this.cvs[index];
+    if (cv.userId !== userId) {
+      throw new ForbiddenException(
+        'You can only delete your own CV',
+      );
     }
 
     this.cvs.splice(index, 1);

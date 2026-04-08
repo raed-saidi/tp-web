@@ -44,7 +44,7 @@ async function bootstrap() {
       path: '/cv/amine-benali.pdf',
       userId: u1.id,
       skillIds: [],
-    });
+    }, u1.id);
 
     const cv2 = cvService.create({
       name: 'Trabelsi',
@@ -55,7 +55,7 @@ async function bootstrap() {
       path: '/cv/sarra-trabelsi.pdf',
       userId: u2.id,
       skillIds: [],
-    });
+    }, u2.id);
 
     const cv3 = cvService.create({
       name: 'Jaziri',
@@ -66,7 +66,7 @@ async function bootstrap() {
       path: '/cv/youssef-jaziri.pdf',
       userId: u3.id,
       skillIds: [],
-    });
+    }, u3.id);
 
     // Skills
     skillService.create({ designation: 'NestJS', cvId: cv1.id });
