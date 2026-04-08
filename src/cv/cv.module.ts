@@ -1,9 +1,21 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { CvService } from './cv.service';
 import { CvController } from './cv.controller';
+import { AuthMiddleware } from '../common/middleware/auth.middleware';
 
 @Module({
   controllers: [CvController],
   providers: [CvService],
 })
-export class CvModule {}
+export class CvModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .forRoutes(
+        { path: 'cv', method: RequestMethod.POST },
+        { path: 'cv/:id', method: RequestMethod.PATCH },
+        { path: 'cv/:id', method: RequestMethod.DELETE },
+      );
+  }
+}
+

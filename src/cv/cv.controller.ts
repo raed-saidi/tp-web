@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
@@ -8,8 +9,8 @@ export class CvController {
   constructor(private readonly cvService: CvService) {}
 
   @Post()
-  create(@Body() createCvDto: CreateCvDto) {
-    return this.cvService.create(createCvDto);
+  create(@Body() createCvDto: CreateCvDto, @Req() req: Request) {
+    return this.cvService.create(createCvDto, req.userId!);
   }
 
   @Get()
@@ -23,12 +24,17 @@ export class CvController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateCvDto: UpdateCvDto) {
-    return this.cvService.update(id, updateCvDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCvDto: UpdateCvDto,
+    @Req() req: Request,
+  ) {
+    return this.cvService.update(id, updateCvDto, req.userId!);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.cvService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.cvService.remove(id, req.userId!);
   }
 }
+
