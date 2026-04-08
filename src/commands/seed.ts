@@ -42,7 +42,6 @@ async function bootstrap() {
       cin: '14852369',
       job: 'Developpeur Backend',
       path: '/cv/amine-benali.pdf',
-      userId: u1.id,
       skillIds: [],
     }, u1.id);
 
@@ -53,7 +52,6 @@ async function bootstrap() {
       cin: '12912568',
       job: 'Ingenieure QA',
       path: '/cv/sarra-trabelsi.pdf',
-      userId: u2.id,
       skillIds: [],
     }, u2.id);
 
@@ -64,7 +62,6 @@ async function bootstrap() {
       cin: '12900066',
       job: 'DevOps Engineer',
       path: '/cv/youssef-jaziri.pdf',
-      userId: u3.id,
       skillIds: [],
     }, u3.id);
 
