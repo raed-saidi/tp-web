@@ -1,14 +1,6 @@
-import {
-  Injectable,
-  NestMiddleware,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
-import { JwtPayload, verify } from 'jsonwebtoken';
-
-export const AUTH_USER_HEADER = 'auth-user';
-export const AUTH_USER_SECRET =
-  process.env.AUTH_USER_SECRET ?? 'your-secret-key';
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+import { verify } from 'jsonwebtoken';
 
 declare global {
   namespace Express {
@@ -21,22 +13,22 @@ declare global {
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers[AUTH_USER_HEADER];
+    const token = req.headers['auth-user'];
 
     if (!token) {
-      throw new UnauthorizedException(`Missing ${AUTH_USER_HEADER} header`);
+      throw new UnauthorizedException('Missing auth-user header');
     }
 
     try {
-      const rawToken = Array.isArray(token) ? token[0] : token;
-      const decoded = verify(rawToken, AUTH_USER_SECRET);
-      const userId = this.extractUserId(decoded);
+      const decoded = verify(token as string, 'your-secret-key') as {
+        userId: number;
+      };
 
-      if (userId === undefined) {
+      if (!decoded.userId) {
         throw new UnauthorizedException('Token does not contain userId');
       }
 
-      req.userId = userId;
+      req.userId = decoded.userId;
       next();
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -44,18 +36,5 @@ export class AuthMiddleware implements NestMiddleware {
       }
       throw new UnauthorizedException('Invalid token');
     }
-  }
-
-  private extractUserId(decoded: string | JwtPayload): number | undefined {
-    if (typeof decoded === 'string') {
-      return undefined;
-    }
-
-    const { userId } = decoded;
-    if (typeof userId !== 'number' || !Number.isInteger(userId) || userId <= 0) {
-      return undefined;
-    }
-
-    return userId;
   }
 }
