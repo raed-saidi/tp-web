@@ -13,7 +13,6 @@ export class UserService {
       id: this.nextId++,
       ...dto,
       role: dto.role ?? 'user',
-      cvIds: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
