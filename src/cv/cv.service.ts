@@ -12,7 +12,7 @@ export class CvService {
     const cv: Cv = {
       id: this.nextId++,
       ...dto,
-      userId: userId,
+      userId,
       skillIds: dto.skillIds ?? [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -36,31 +36,24 @@ export class CvService {
 
   update(id: number, dto: UpdateCvDto, userId: number): Cv {
     const cv = this.findOne(id);
-    
-    if (cv.userId !== userId) {
-      throw new ForbiddenException(
-        'You can only update your own CV',
-      );
-    }
-    
+    this.assertOwnership(cv, userId);
+
     Object.assign(cv, dto, { updatedAt: new Date() });
     return cv;
   }
 
   remove(id: number, userId: number): { deleted: boolean; id: number } {
+    const cv = this.findOne(id);
+    this.assertOwnership(cv, userId);
     const index = this.cvs.findIndex((item) => item.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Cv ${id} not found`);
-    }
-
-    const cv = this.cvs[index];
-    if (cv.userId !== userId) {
-      throw new ForbiddenException(
-        'You can only delete your own CV',
-      );
-    }
 
     this.cvs.splice(index, 1);
     return { deleted: true, id };
+  }
+
+  private assertOwnership(cv: Cv, userId: number): void {
+    if (cv.userId !== userId) {
+      throw new ForbiddenException('You can only modify your own CV');
+    }
   }
 }
