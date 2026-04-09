@@ -9,12 +9,14 @@ import { User } from '../user/entities/user.entity';
 import { RegisterDto } from './dto/register.entity';
 import { LoginDto } from './dto/login.entity';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private jwtService: JwtService,
   ) {}
 
   // REGISTER
@@ -54,15 +56,12 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
+    const payload = {
+      userId: user.id,
+      role: user.role,
+    };
     return {
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
+      access_token: this.jwtService.sign(payload),
     };
   }
 }
