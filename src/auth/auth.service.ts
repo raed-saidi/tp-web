@@ -3,39 +3,47 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../user/entities/user.entity';
 import { RegisterDto } from './dto/register.entity';
 import { LoginDto } from './dto/login.entity';
-import { User } from 'src/user/entities/user.entity';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
-  users: User[] = [];
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
+
+  // REGISTER
   async register(dto: RegisterDto) {
-    const exists = this.users.find((u) => u.username === dto.username);
+    const exists = await this.userRepository.findOne({
+      where: { username: dto.username },
+    });
+
     if (exists) {
       throw new BadRequestException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const user: User = {
-      id: this.users.length + 1,
+    const user = this.userRepository.create({
       username: dto.username,
       email: dto.email,
       password: hashedPassword,
       role: 'user',
-    };
+    });
 
-    this.users.push(user);
-
-    return {
-      message: 'User registered successfully',
-      user,
-    };
+    return this.userRepository.save(user);
   }
 
+  // LOGIN
   async login(dto: LoginDto) {
-    const user = this.users.find((u) => u.username === dto.username);
+    const user = await this.userRepository.findOne({
+      where: { username: dto.username },
+    });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -53,6 +61,7 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
+        role: user.role,
       },
     };
   }
