@@ -1,98 +1,175 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# TP REST API - Auth, CV et Neon
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Ce projet est une API NestJS réalisée pour le TP. Il met en place l’authentification, l’autorisation par rôle et la gestion des CV avec une base de données PostgreSQL hébergée sur Neon.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Objectif du TP
 
-## Description
+Le but du projet est de couvrir les points suivants:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- inscription d’un utilisateur
+- connexion avec génération d’un JWT
+- protection des routes avec Passport + JWT
+- association d’un CV à son propriétaire
+- limitation des actions selon le rôle de l’utilisateur
+- récupération de tous les CVs uniquement pour un admin
+- récupération des CVs du user connecté uniquement pour un user normal
+- stockage des données dans Neon PostgreSQL via TypeORM
 
-## Project setup
+## Technologies utilisées
 
-```bash
-$ npm install
+- NestJS
+- TypeORM
+- PostgreSQL Neon
+- Passport JWT
+- bcryptjs
+- class-validator / class-transformer
+
+## Structure du projet
+
+- `src/auth` : inscription, login, JWT, guards
+- `src/user` : entité et service user
+- `src/cv` : gestion des CVs
+- `src/skill` : gestion des compétences liées aux CVs
+- `src/commands/seed.ts` : insertion de données de test
+
+## Fonctionnement de l’authentification
+
+### 1. Inscription
+
+L’utilisateur envoie:
+
+- `username`
+- `email`
+- `password`
+
+Le mot de passe est hashé avec `bcryptjs` avant d’être stocké.
+
+### 2. Login
+
+L’utilisateur se connecte avec son `email` et son `password`.
+
+Si les identifiants sont corrects, l’API renvoie un JWT:
+
+```json
+{
+  "access_token": "..."
+}
 ```
 
-## Compile and run the project
+Le token contient au minimum:
 
-```bash
-# development
-$ npm run start
+- `userId`
+- `role`
 
-# watch mode
-$ npm run start:dev
+## Fonctionnement des CVs
 
-# production mode
-$ npm run start:prod
+### Utilisateur normal
+
+- il peut voir seulement ses CVs
+- il peut modifier seulement ses CVs
+- il peut supprimer seulement ses CVs
+- il ne peut pas accéder aux CVs des autres utilisateurs
+
+### Admin
+
+- il peut voir tous les CVs
+- il peut modifier ou supprimer tous les CVs
+- il peut voir son propre CV comme les autres
+
+## Intégration Neon
+
+La base de données est connectée à Neon via TypeORM.
+
+Dans [src/app.module.ts](src/app.module.ts), la connexion utilise:
+
+- `DATABASE_URL`
+- SSL activé
+- `autoLoadEntities: true`
+- `synchronize: true` pour le TP
+
+### Variables d’environnement
+
+Crée un fichier `.env` à la racine du projet avec au minimum:
+
+```env
+DATABASE_URL=postgresql://user:password@host/db?sslmode=require
+jwt_secret=your_jwt_secret
 ```
 
-## Run tests
+Tu peux aussi utiliser `JWT_SECRET` ou `SECRET_KEY` selon ton fichier `.env`, mais `jwt_secret` est bien supporté.
+
+## Données de test
+
+Le seed crée:
+
+- 3 users
+- 3 CVs
+- plusieurs skills
+
+Compte admin de test:
+
+- email: `youssef.jaziri@gmail.com`
+- password: `123456`
+
+Comptes user de test:
+
+- `amine.benali@gmail.com` / `123456`
+- `sarra.trabelsi@gmail.com` / `123456`
+
+## Installation
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Lancer le projet
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Mode développement:
 
-## Resources
+```bash
+npm run start:dev
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Build
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npm run build
+```
 
-## Support
+## Seed
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+npm run seed
+```
 
-## Stay in touch
+## Tests
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm run test
+npm run test:e2e
+```
 
-## License
+## Endpoints principaux
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Auth
+
+- `POST /auth/register`
+- `POST /auth/login`
+
+### CV
+
+- `POST /cv`
+- `GET /cv`
+- `GET /cv/:id`
+- `PATCH /cv/:id`
+- `DELETE /cv/:id`
+
+## Remarques pour le prof
+
+- Le projet respecte la logique demandée dans le TP: auth, JWT, rôle admin, propriétaire de CV et intégration Neon.
+- Les CVs sont liés au user connecté.
+- Le code a été gardé volontairement simple pour rester lisible et facile à présenter.
