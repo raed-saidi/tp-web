@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Repository } from 'typeorm';
-import { User } from '../user/entities/user.entity';
+import { User } from '../../user/entities/user.entity';
 import { JwtPayload } from 'src/jwt-payload.interface';
 
 const JWT_SECRET =
@@ -35,5 +35,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       username: user.username,
       role: user.role,
     };
+  }
+  private getAuthenticatedUser(req: Request): { userId: number; role: string } {
+    const payload = req.user as JwtPayload;
+
+    if (!payload || typeof payload.userId !== 'number' || !payload.role) {
+      throw new UnauthorizedException();
+    }
+
+    return { userId: payload.userId, role: payload.role };
   }
 }

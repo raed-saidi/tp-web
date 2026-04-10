@@ -3,7 +3,7 @@ import { AppModule } from '../app.module';
 import { UserService } from '../user/user.service';
 import { CvService } from '../cv/cv.service';
 import { SkillService } from '../skill/skill.service';
-
+import * as bcrypt from 'bcryptjs';
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
@@ -16,21 +16,21 @@ async function bootstrap() {
     const u1 = await userService.create({
       username: 'amine.benali',
       email: 'amine.benali@gmail.com',
-      password: '123456',
+      password: await bcrypt.hash('123456', 10),
       role: 'user',
     });
 
     const u2 = await userService.create({
       username: 'sarra.trabelsi',
       email: 'sarra.trabelsi@gmail.com',
-      password: '123456',
+      password: await bcrypt.hash('123456', 10),
       role: 'user',
     });
 
     const u3 = await userService.create({
       username: 'youssef.jaziri',
       email: 'youssef.jaziri@gmail.com',
-      password: '123456',
+      password: await bcrypt.hash('123456', 10),
       role: 'admin',
     });
 
