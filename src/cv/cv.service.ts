@@ -51,6 +51,10 @@ export class CvService {
     return this.cvRepository.save(cv);
   }
 
+  findAllAdmin(): Promise<Cv[]> {
+    return this.cvRepository.find({ relations: ['user', 'skills'] });
+  }
+
   async findAll(user: { userId: number; role: string }) {
     if (!user) throw new UnauthorizedException();
 

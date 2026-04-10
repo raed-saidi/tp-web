@@ -6,9 +6,7 @@ import { CvModule } from './cv/cv.module';
 import { UserModule } from './user/user.module';
 import { SkillModule } from './skill/skill.module';
 import { AuthModule } from './auth/auth.module';
-import dotenv from 'dotenv';
 import { ConfigModule } from '@nestjs/config';
-dotenv.config();
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -31,7 +29,7 @@ dotenv.config();
     UserModule,
     SkillModule,
     AuthModule,
-    ConfigModule,
+    ConfigModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

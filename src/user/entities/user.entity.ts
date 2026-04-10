@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Cv } from '../../cv/entities/cv.entity';
+import { Role } from '../../enum/role.enum';
 
 @Entity()
 export class User {
@@ -23,7 +24,7 @@ export class User {
   password!: string;
 
   @Column()
-  role!: 'user' | 'admin';
+  role!: Role;
 
   @OneToMany(() => Cv, (cv) => cv.user)
   cvs!: Cv[];

@@ -16,6 +16,8 @@ import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { JwtAuthGuard } from '../auth/guards/authGuard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../decorator/roles.decorator';
 import { JwtPayload } from 'src/jwt-payload.interface';
 
 @Controller('cv')
@@ -26,6 +28,13 @@ export class CvController {
   @Post()
   create(@Body() createCvDto: CreateCvDto, @Req() req: AuthRequest) {
     return this.cvService.create(createCvDto, this.getAuthenticatedUser(req));
+  }
+
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('all')
+  findAllAdmin() {
+    return this.cvService.findAllAdmin();
   }
 
   @UseGuards(JwtAuthGuard)

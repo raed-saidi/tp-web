@@ -7,11 +7,12 @@ import { User } from '../user/entities/user.entity';
 import { Skill } from '../skill/entities/skill.entity';
 import { JwtService } from '@nestjs/jwt';
 import { AuthMiddleware } from '../common/middleware/auth.middleware';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Cv, User, Skill])],
   controllers: [CvController],
-  providers: [CvService, JwtService],
+  providers: [CvService, JwtService, RolesGuard],
 })
 export class CvModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -6,8 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
-import { RegisterDto } from './dto/register.entity';
-import { LoginDto } from './dto/login.entity';
+import { Role } from '../enum/role.enum';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 
@@ -35,7 +36,7 @@ export class AuthService {
       username: dto.username,
       email: dto.email,
       password: hashedPassword,
-      role: 'user',
+      role: Role.User,
     });
 
     return this.userRepository.save(user);
