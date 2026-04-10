@@ -168,8 +168,4 @@ npm run test:e2e
 - `PATCH /cv/:id`
 - `DELETE /cv/:id`
 
-## Remarques pour le prof
 
-- Le projet respecte la logique demandée dans le TP: auth, JWT, rôle admin, propriétaire de CV et intégration Neon.
-- Les CVs sont liés au user connecté.
-- Le code a été gardé volontairement simple pour rester lisible et facile à présenter.
