@@ -3,7 +3,7 @@ import { AppModule } from '../app.module';
 import { UserService } from '../user/user.service';
 import { CvService } from '../cv/cv.service';
 import { SkillService } from '../skill/skill.service';
-
+import * as bcrypt from 'bcryptjs';
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
@@ -12,71 +12,80 @@ async function bootstrap() {
     const cvService = app.get(CvService);
     const skillService = app.get(SkillService);
 
-    // Users 
-    const u1 = userService.create({
+    // Users
+    const u1 = await userService.create({
       username: 'amine.benali',
       email: 'amine.benali@gmail.com',
-      password: '123456',
+      password: await bcrypt.hash('123456', 10),
       role: 'user',
     });
 
-    const u2 = userService.create({
+    const u2 = await userService.create({
       username: 'sarra.trabelsi',
       email: 'sarra.trabelsi@gmail.com',
-      password: '123456',
+      password: await bcrypt.hash('123456', 10),
       role: 'user',
     });
 
-    const u3 = userService.create({
+    const u3 = await userService.create({
       username: 'youssef.jaziri',
       email: 'youssef.jaziri@gmail.com',
-      password: '123456',
+      password: await bcrypt.hash('123456', 10),
       role: 'admin',
     });
 
     // CVs
-    const cv1 = cvService.create({
-      name: 'Ben Ali',
-      firstname: 'Amine',
-      age: 24,
-      cin: '14852369',
-      job: 'Developpeur Backend',
-      path: '/cv/amine-benali.pdf',
-      skillIds: [],
-    }, u1.id);
+    const cv1 = await cvService.create(
+      {
+        name: 'Ben Ali',
+        firstname: 'Amine',
+        age: 24,
+        cin: '14852369',
+        job: 'Developpeur Backend',
+        path: '/cv/amine-benali.pdf',
+        skillIds: [],
+      },
+      { userId: u1.id, role: u1.role },
+    );
 
-    const cv2 = cvService.create({
-      name: 'Trabelsi',
-      firstname: 'Sarra',
-      age: 23,
-      cin: '12912568',
-      job: 'Ingenieure QA',
-      path: '/cv/sarra-trabelsi.pdf',
-      skillIds: [],
-    }, u2.id);
+    const cv2 = await cvService.create(
+      {
+        name: 'Trabelsi',
+        firstname: 'Sarra',
+        age: 23,
+        cin: '12912568',
+        job: 'Ingenieure QA',
+        path: '/cv/sarra-trabelsi.pdf',
+        skillIds: [],
+      },
+      { userId: u2.id, role: u2.role },
+    );
 
-    const cv3 = cvService.create({
-      name: 'Jaziri',
-      firstname: 'Youssef',
-      age: 26,
-      cin: '12900066',
-      job: 'DevOps Engineer',
-      path: '/cv/youssef-jaziri.pdf',
-      skillIds: [],
-    }, u3.id);
+    const cv3 = await cvService.create(
+      {
+        name: 'Jaziri',
+        firstname: 'Youssef',
+        age: 26,
+        cin: '12900066',
+        job: 'DevOps Engineer',
+        path: '/cv/youssef-jaziri.pdf',
+        skillIds: [],
+      },
+      { userId: u3.id, role: u3.role },
+    );
 
     // Skills
-    skillService.create({ designation: 'NestJS', cvId: cv1.id });
-    skillService.create({ designation: 'PostgreSQL', cvId: cv1.id });
-    skillService.create({ designation: 'TypeScript', cvId: cv1.id });
+    await skillService.create({ designation: 'NestJS', cvId: cv1.id });
+    await skillService.create({ designation: 'PostgreSQL', cvId: cv1.id });
+    await skillService.create({ designation: 'TypeScript', cvId: cv1.id });
 
-    skillService.create({ designation: 'Testing API', cvId: cv2.id });
-    skillService.create({ designation: 'Cypress', cvId: cv2.id });
-    skillService.create({ designation: 'Jest', cvId: cv2.id });
+    await skillService.create({ designation: 'Testing API', cvId: cv2.id });
+    await skillService.create({ designation: 'Cypress', cvId: cv2.id });
+    await skillService.create({ designation: 'Jest', cvId: cv2.id });
 
-    skillService.create({ designation: 'Docker', cvId: cv3.id });
-    skillService.create({ designation: 'CI/CD', cvId: cv3.id });
-    skillService.create({ designation: 'Linux', cvId: cv3.id });
+    await skillService.create({ designation: 'Docker', cvId: cv3.id });
+    await skillService.create({ designation: 'CI/CD', cvId: cv3.id });
+    await skillService.create({ designation: 'Linux', cvId: cv3.id });
 
     console.log('Seed Successful');
   } catch (error) {
@@ -86,4 +95,4 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+void bootstrap();

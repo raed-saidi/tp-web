@@ -1,59 +1,116 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { Cv } from './entities/cv.entity';
+import { User } from '../user/entities/user.entity';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
-import { Cv } from './entities/cv.entity';
-
 @Injectable()
 export class CvService {
-  private cvs: Cv[] = [];
-  private nextId = 1;
+  constructor(
+    @InjectRepository(Cv)
+    private readonly cvRepository: Repository<Cv>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-  create(dto: CreateCvDto, userId: number): Cv {
-    const cv: Cv = {
-      id: this.nextId++,
+  async create(
+    dto: CreateCvDto,
+    user: { userId: number; role: string },
+  ): Promise<Cv> {
+    const owner = await this.userRepository.findOne({
+      where: { id: user.userId },
+    });
+
+    if (!owner) {
+      throw new NotFoundException(`User ${user.userId} not found`);
+    }
+
+    const cv = this.cvRepository.create({
       ...dto,
-      userId,
+      user: owner,
       skillIds: dto.skillIds ?? [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    });
 
-    this.cvs.push(cv);
-    return cv;
+    return this.cvRepository.save(cv);
   }
 
-  findAll(): Cv[] {
-    return this.cvs;
-  }
+  async findAll(user: { userId: number; role: string }) {
+    if (!user) throw new UnauthorizedException();
 
-  findOne(id: number): Cv {
-    const cv = this.cvs.find((item) => item.id === id);
-    if (!cv) {
-      throw new NotFoundException(`Cv ${id} not found`);
+    if (user.role === 'admin') {
+      return this.cvRepository.find({
+        relations: ['user'],
+      });
     }
+
+    return this.cvRepository.find({
+      where: { user: { id: user.userId } },
+      relations: ['user'],
+    });
+  }
+
+  async findOne(
+    id: number,
+    user: { userId: number; role: string },
+  ): Promise<Cv> {
+    const cv = await this.cvRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!cv) throw new NotFoundException();
+
+    if (user.role !== 'admin' && cv.user.id !== user.userId) {
+      throw new ForbiddenException();
+    }
+
     return cv;
   }
 
-  update(id: number, dto: UpdateCvDto, userId: number): Cv {
-    const cv = this.findOne(id);
-    this.assertOwnership(cv, userId);
+  async update(
+    id: number,
+    dto: UpdateCvDto,
+    user: { userId: number; role: string },
+  ): Promise<Cv> {
+    const cv = await this.cvRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
 
-    Object.assign(cv, dto, { updatedAt: new Date() });
-    return cv;
+    if (!cv) throw new NotFoundException();
+
+    if (user.role !== 'admin' && cv.user.id !== user.userId) {
+      throw new ForbiddenException();
+    }
+
+    Object.assign(cv, dto);
+    return this.cvRepository.save(cv);
   }
 
-  remove(id: number, userId: number): { deleted: boolean; id: number } {
-    const cv = this.findOne(id);
-    this.assertOwnership(cv, userId);
-    const index = this.cvs.findIndex((item) => item.id === id);
+  async remove(
+    id: number,
+    user: { userId: number; role: string },
+  ): Promise<{ deleted: boolean; id: number }> {
+    const cv = await this.cvRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
 
-    this.cvs.splice(index, 1);
+    if (!cv) throw new NotFoundException();
+
+    if (user.role !== 'admin' && cv.user.id !== user.userId) {
+      throw new ForbiddenException();
+    }
+
+    await this.cvRepository.delete(id);
     return { deleted: true, id };
-  }
-
-  private assertOwnership(cv: Cv, userId: number): void {
-    if (cv.userId !== userId) {
-      throw new ForbiddenException('You can only modify your own CV');
-    }
   }
 }

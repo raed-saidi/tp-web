@@ -1,50 +1,63 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
+import { Cv } from '../cv/entities/cv.entity';
 
 @Injectable()
 export class SkillService {
-  private skills: Skill[] = [];
-  private nextId = 1;
+  constructor(
+    @InjectRepository(Skill)
+    private readonly skillRepository: Repository<Skill>,
+    @InjectRepository(Cv)
+    private readonly cvRepository: Repository<Cv>,
+  ) {}
 
-  create(dto: CreateSkillDto): Skill {
-    const skill: Skill = {
-      id: this.nextId++,
-      ...dto,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  async create(dto: CreateSkillDto): Promise<Skill> {
+    const cv = await this.cvRepository.findOne({ where: { id: dto.cvId } });
+    if (!cv) {
+      throw new NotFoundException(`Cv ${dto.cvId} not found`);
+    }
 
-    this.skills.push(skill);
-    return skill;
+    const skill = this.skillRepository.create(dto);
+    return this.skillRepository.save(skill);
   }
 
-  findAll(): Skill[] {
-    return this.skills;
+  findAll(): Promise<Skill[]> {
+    return this.skillRepository.find({ order: { id: 'ASC' } });
   }
 
-  findOne(id: number): Skill {
-    const skill = this.skills.find((item) => item.id === id);
+  async findOne(id: number): Promise<Skill> {
+    const skill = await this.skillRepository.findOne({ where: { id } });
     if (!skill) {
       throw new NotFoundException(`Skill ${id} not found`);
     }
     return skill;
   }
 
-  update(id: number, dto: UpdateSkillDto): Skill {
-    const skill = this.findOne(id);
-    Object.assign(skill, dto, { updatedAt: new Date() });
-    return skill;
-  }
+  async update(id: number, dto: UpdateSkillDto): Promise<Skill> {
+    const skill = await this.findOne(id);
 
-  remove(id: number): { deleted: boolean; id: number } {
-    const index = this.skills.findIndex((item) => item.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Skill ${id} not found`);
+    if (dto.cvId !== undefined) {
+      const cv = await this.cvRepository.findOne({ where: { id: dto.cvId } });
+      if (!cv) {
+        throw new NotFoundException(`Cv ${dto.cvId} not found`);
+      }
     }
 
-    this.skills.splice(index, 1);
+    Object.assign(skill, dto);
+    return this.skillRepository.save(skill);
+  }
+
+  async remove(id: number): Promise<{ deleted: boolean; id: number }> {
+    await this.findOne(id);
+    await this.skillRepository.delete(id);
     return { deleted: true, id };
+  }
+
+  async clear(): Promise<void> {
+    await this.skillRepository.delete({});
   }
 }

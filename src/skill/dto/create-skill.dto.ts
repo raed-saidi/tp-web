@@ -1,8 +1,8 @@
 import { IsInt, IsString } from 'class-validator';
 export class CreateSkillDto {
-    @IsString()
-    designation: string;
+  @IsString()
+  designation!: string;
 
-    @IsInt()
-    cvId: number;
+  @IsInt()
+  cvId!: number;
 }

@@ -8,13 +8,11 @@ import { JwtPayload, verify } from 'jsonwebtoken';
 
 export const AUTH_USER_HEADER = 'auth-user';
 export const AUTH_USER_SECRET =
-  process.env.AUTH_USER_SECRET ?? 'your-secret-key';
+  process.env.JWT_SECRET ?? process.env.AUTH_USER_SECRET ?? 'your-secret-key';
 
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: number;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    userId?: number;
   }
 }
 
@@ -29,7 +27,10 @@ export class AuthMiddleware implements NestMiddleware {
 
     try {
       const rawToken = Array.isArray(token) ? token[0] : token;
-      const decoded = verify(rawToken, AUTH_USER_SECRET);
+      const bearerToken = rawToken.startsWith('Bearer ')
+        ? rawToken.slice('Bearer '.length)
+        : rawToken;
+      const decoded = verify(bearerToken, AUTH_USER_SECRET);
       const userId = this.extractUserId(decoded);
 
       if (userId === undefined) {
@@ -52,7 +53,11 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
     const { userId } = decoded;
-    if (typeof userId !== 'number' || !Number.isInteger(userId) || userId <= 0) {
+    if (
+      typeof userId !== 'number' ||
+      !Number.isInteger(userId) ||
+      userId <= 0
+    ) {
       return undefined;
     }
 

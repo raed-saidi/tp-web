@@ -8,55 +8,71 @@ import {
   Patch,
   Post,
   Req,
+  UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { Request } from 'express';
+import type { AuthRequest } from 'src/auth/auth.request';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
+import { JwtAuthGuard } from '../auth/guards/authGuard';
+import { JwtPayload } from 'src/jwt-payload.interface';
 
 @Controller('cv')
 export class CvController {
   constructor(private readonly cvService: CvService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createCvDto: CreateCvDto, @Req() req: Request) {
-    return this.cvService.create(createCvDto, this.getAuthenticatedUserId(req));
+  create(@Body() createCvDto: CreateCvDto, @Req() req: AuthRequest) {
+    return this.cvService.create(createCvDto, this.getAuthenticatedUser(req));
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.cvService.findAll();
+  findAll(@Req() req: AuthRequest) {
+    return this.cvService.findAll(this.getAuthenticatedUser(req));
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.cvService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: AuthRequest) {
+    return this.cvService.findOne(id, this.getAuthenticatedUser(req));
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCvDto: UpdateCvDto,
-    @Req() req: Request,
+    @Req() req: AuthRequest,
   ) {
     return this.cvService.update(
       id,
       updateCvDto,
-      this.getAuthenticatedUserId(req),
+      this.getAuthenticatedUser(req),
     );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    return this.cvService.remove(id, this.getAuthenticatedUserId(req));
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: AuthRequest) {
+    return this.cvService.remove(id, this.getAuthenticatedUser(req));
   }
 
-  private getAuthenticatedUserId(req: Request): number {
-    if (req.userId === undefined) {
-      throw new UnauthorizedException('Missing authenticated user');
+  private getAuthenticatedUser(req: AuthRequest): {
+    userId: number;
+    role: string;
+  } {
+    const payload = req.user as JwtPayload;
+
+    if (!payload || typeof payload.userId !== 'number' || !payload.role) {
+      throw new UnauthorizedException('Invalid or missing token payload');
     }
 
-    return req.userId;
+    return {
+      userId: payload.userId,
+      role: payload.role,
+    };
   }
 }
