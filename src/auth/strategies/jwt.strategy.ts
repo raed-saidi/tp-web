@@ -36,13 +36,4 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       role: user.role,
     };
   }
-  private getAuthenticatedUser(req: Request): { userId: number; role: string } {
-    const payload = req.user as JwtPayload;
-
-    if (!payload || typeof payload.userId !== 'number' || !payload.role) {
-      throw new UnauthorizedException();
-    }
-
-    return { userId: payload.userId, role: payload.role };
-  }
 }

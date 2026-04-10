@@ -11,7 +11,7 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthRequest } from 'src/auth/auth.request';
+import type { AuthRequest } from 'src/auth/auth.request';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
@@ -60,7 +60,10 @@ export class CvController {
     return this.cvService.remove(id, this.getAuthenticatedUser(req));
   }
 
-  private getAuthenticatedUser(req: AuthRequest): { userId: number; role: string } {
+  private getAuthenticatedUser(req: AuthRequest): {
+    userId: number;
+    role: string;
+  } {
     const payload = req.user as JwtPayload;
 
     if (!payload || typeof payload.userId !== 'number' || !payload.role) {
