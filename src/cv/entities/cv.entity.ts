@@ -3,8 +3,9 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -44,10 +45,8 @@ export class Cv {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @Column('simple-array', { default: '' })
-  skillIds!: number[];
-
-  @OneToMany(() => Skill, (skill) => skill.cv)
+  @ManyToMany(() => Skill, (skill) => skill.cvs, { eager: false })
+  @JoinTable()
   skills!: Skill[];
 
   @CreateDateColumn()

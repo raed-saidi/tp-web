@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { Cv } from './entities/cv.entity';
 import { User } from '../user/entities/user.entity';
+import { Skill } from '../skill/entities/skill.entity';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
+
 @Injectable()
 export class CvService {
   constructor(
@@ -19,6 +21,8 @@ export class CvService {
     private readonly cvRepository: Repository<Cv>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Skill)
+    private readonly skillRepository: Repository<Skill>,
   ) {}
 
   async create(
@@ -33,10 +37,15 @@ export class CvService {
       throw new NotFoundException(`User ${user.userId} not found`);
     }
 
+    const skills =
+      dto.skillIds && dto.skillIds.length
+        ? await this.skillRepository.findBy({ id: In(dto.skillIds) })
+        : [];
+
     const cv = this.cvRepository.create({
       ...dto,
       user: owner,
-      skillIds: dto.skillIds ?? [],
+      skills,
     });
 
     return this.cvRepository.save(cv);
@@ -47,13 +56,13 @@ export class CvService {
 
     if (user.role === 'admin') {
       return this.cvRepository.find({
-        relations: ['user'],
+        relations: ['user', 'skills'],
       });
     }
 
     return this.cvRepository.find({
       where: { user: { id: user.userId } },
-      relations: ['user'],
+      relations: ['user', 'skills'],
     });
   }
 
@@ -63,7 +72,7 @@ export class CvService {
   ): Promise<Cv> {
     const cv = await this.cvRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'skills'],
     });
 
     if (!cv) throw new NotFoundException();
@@ -82,7 +91,7 @@ export class CvService {
   ): Promise<Cv> {
     const cv = await this.cvRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'skills'],
     });
 
     if (!cv) throw new NotFoundException();
@@ -91,7 +100,15 @@ export class CvService {
       throw new ForbiddenException();
     }
 
-    Object.assign(cv, dto);
+    if (dto.skillIds !== undefined) {
+      cv.skills =
+        dto.skillIds.length
+          ? await this.skillRepository.findBy({ id: In(dto.skillIds) })
+          : [];
+    }
+
+    const { skillIds: _, ...rest } = dto;
+    Object.assign(cv, rest);
     return this.cvRepository.save(cv);
   }
 

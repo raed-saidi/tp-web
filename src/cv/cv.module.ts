@@ -4,9 +4,11 @@ import { CvService } from './cv.service';
 import { CvController } from './cv.controller';
 import { Cv } from './entities/cv.entity';
 import { User } from '../user/entities/user.entity';
+import { Skill } from '../skill/entities/skill.entity';
 import { JwtService } from '@nestjs/jwt';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Cv, User])],
+  imports: [TypeOrmModule.forFeature([Cv, User, Skill])],
   controllers: [CvController],
   providers: [CvService, JwtService],
 })

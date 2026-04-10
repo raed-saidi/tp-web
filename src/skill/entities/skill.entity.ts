@@ -2,8 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -17,15 +16,8 @@ export class Skill {
   @Column()
   designation!: string;
 
-  @Column()
-  cvId!: number;
-
-  @ManyToOne(() => Cv, (cv) => cv.skills, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'cvId' })
-  cv!: Cv;
+  @ManyToMany(() => Cv, (cv) => cv.skills)
+  cvs!: Cv[];
 
   @CreateDateColumn()
   createdAt!: Date;
