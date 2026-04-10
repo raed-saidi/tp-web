@@ -32,9 +32,9 @@ describe('AuthMiddleware', () => {
   });
 
   it('rejects requests without auth-user header', () => {
-    expect(() =>
-      middleware.use(req as Request, res as Response, next),
-    ).toThrow(UnauthorizedException);
+    expect(() => middleware.use(req as Request, res as Response, next)).toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects tokens without userId', () => {
@@ -42,9 +42,9 @@ describe('AuthMiddleware', () => {
       [AUTH_USER_HEADER]: sign({ scope: 'cv:write' }, AUTH_USER_SECRET),
     };
 
-    expect(() =>
-      middleware.use(req as Request, res as Response, next),
-    ).toThrow(UnauthorizedException);
+    expect(() => middleware.use(req as Request, res as Response, next)).toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects invalid tokens', () => {
@@ -52,8 +52,8 @@ describe('AuthMiddleware', () => {
       [AUTH_USER_HEADER]: 'not-a-jwt',
     };
 
-    expect(() =>
-      middleware.use(req as Request, res as Response, next),
-    ).toThrow(UnauthorizedException);
+    expect(() => middleware.use(req as Request, res as Response, next)).toThrow(
+      UnauthorizedException,
+    );
   });
 });

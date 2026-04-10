@@ -45,7 +45,7 @@ async function bootstrap() {
         path: '/cv/amine-benali.pdf',
         skillIds: [],
       },
-      u1.id,
+      u1,
     );
 
     const cv2 = await cvService.create(
@@ -58,7 +58,7 @@ async function bootstrap() {
         path: '/cv/sarra-trabelsi.pdf',
         skillIds: [],
       },
-      u2.id,
+      u2,
     );
 
     const cv3 = await cvService.create(
@@ -71,7 +71,7 @@ async function bootstrap() {
         path: '/cv/youssef-jaziri.pdf',
         skillIds: [],
       },
-      u3.id,
+      u3,
     );
 
     // Skills

@@ -19,36 +19,51 @@ export class CvService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(dto: CreateCvDto, userId: number): Promise<Cv> {
-    const owner = await this.userRepository.findOne({ where: { id: userId } });
+  async create(
+    dto: CreateCvDto,
+    user: { id: number; role: string },
+  ): Promise<Cv> {
+    const owner = await this.userRepository.findOne({ where: { id: user.id } });
     if (!owner) {
-      throw new NotFoundException(`User ${userId} not found`);
+      throw new NotFoundException(`User ${user.id} not found`);
     }
 
     const cv = this.cvRepository.create({
       ...dto,
-      userId,
+      userId: user.id,
       skillIds: dto.skillIds ?? [],
     });
 
     return this.cvRepository.save(cv);
   }
+  async findAll(user: { id: number; role: string }): Promise<Cv[]> {
+    if (user.role === 'admin') {
+      return this.cvRepository.find({ relations: ['user'] });
+    }
 
-  findAll(): Promise<Cv[]> {
-    return this.cvRepository.find({ order: { id: 'ASC' } });
+    return this.cvRepository.find({
+      where: { user: { id: user.id } },
+      relations: ['user'],
+    });
   }
 
-  async findOne(id: number): Promise<Cv> {
+  async findOne(id: number, user: { id: number; role: string }): Promise<Cv> {
     const cv = await this.cvRepository.findOne({ where: { id } });
     if (!cv) {
       throw new NotFoundException(`Cv ${id} not found`);
     }
+
+    this.assertOwnership(cv, user);
     return cv;
   }
 
-  async update(id: number, dto: UpdateCvDto, userId: number): Promise<Cv> {
-    const cv = await this.findOne(id);
-    this.assertOwnership(cv, userId);
+  async update(
+    id: number,
+    dto: UpdateCvDto,
+    user: { id: number; role: string },
+  ): Promise<Cv> {
+    const cv = await this.findOne(id, user);
+    this.assertOwnership(cv, user);
 
     Object.assign(cv, dto);
     return this.cvRepository.save(cv);
@@ -56,10 +71,10 @@ export class CvService {
 
   async remove(
     id: number,
-    userId: number,
+    user: { id: number; role: string },
   ): Promise<{ deleted: boolean; id: number }> {
-    const cv = await this.findOne(id);
-    this.assertOwnership(cv, userId);
+    const cv = await this.findOne(id, user);
+    this.assertOwnership(cv, user);
 
     await this.cvRepository.delete(id);
     return { deleted: true, id };
@@ -69,9 +84,11 @@ export class CvService {
     await this.cvRepository.delete({});
   }
 
-  private assertOwnership(cv: Cv, userId: number): void {
-    if (cv.userId !== userId) {
-      throw new ForbiddenException('You can only modify your own CV');
+  private assertOwnership(cv: Cv, user: { id: number; role: string }) {
+    if (user.role === 'admin') return;
+
+    if (cv.userId !== user.id) {
+      throw new ForbiddenException();
     }
   }
 }
