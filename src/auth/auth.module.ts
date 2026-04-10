@@ -8,13 +8,19 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
 import { JwtAuthGuard } from './authGuard';
+
+const JWT_SECRET =
+  process.env.jwt_secret ??
+  process.env.JWT_SECRET ??
+  process.env.SECRET_KEY ??
+  'dev-jwt-secret';
 @Module({
   providers: [AuthService, JwtStrategy, RolesGuard, JwtAuthGuard],
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET ?? process.env.SECRET_KEY,
+      secret: JWT_SECRET,
       signOptions: {
         expiresIn: 3600,
       },

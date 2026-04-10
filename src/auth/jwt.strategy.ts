@@ -6,6 +6,12 @@ import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { JwtPayload } from 'src/jwt-payload.interface';
 
+const JWT_SECRET =
+  process.env.jwt_secret ??
+  process.env.JWT_SECRET ??
+  process.env.SECRET_KEY ??
+  'dev-jwt-secret';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -13,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET || '',
+      secretOrKey: JWT_SECRET,
     });
   }
 
